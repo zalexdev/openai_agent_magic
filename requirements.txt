@@ -17,6 +17,9 @@ langchain-google-genai==2.0.8
 # Tavily integration (latest version)
 langchain-tavily==0.2.13
 
+# OpenAI SDK for examples
+openai==1.59.5
+
 # Additional utilities
 python-dotenv==1.0.1
 httpx==0.28.1

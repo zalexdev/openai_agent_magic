@@ -1,15 +1,15 @@
 # OpenAI-Compatible API with Tavily Search
 
-A powerful FastAPI-based service that provides an OpenAI-compatible API endpoint with **transparent Tavily search integration**. This allows you to add web search capabilities to any LLM (OpenAI, Anthropic, Google) without changing your existing code!
+A powerful FastAPI-based service that provides an OpenAI-compatible API endpoint with **transparent Tavily search integration**. Use the standard OpenAI Python SDK with any LLM provider (OpenAI, Anthropic, Google) - just change the `base_url` and the model automatically detects the provider!
 
 ## 🎯 Key Features
 
-- **OpenAI-Compatible API**: Drop-in replacement for OpenAI's chat completions endpoint
-- **Multi-Provider Support**: Works with OpenAI, Anthropic (Claude), and Google (Gemini)
+- **100% OpenAI SDK Compatible**: Use the official OpenAI Python SDK - just change the base URL!
+- **Auto-Provider Detection**: Automatically detects provider from model name (gpt-* → OpenAI, claude* → Anthropic, gemini* → Google)
 - **Transparent Search Integration**: Tavily search automatically available to all models
 - **Streaming Support**: Full support for streaming responses
 - **Vision Support**: Multimodal content support (text + images)
-- **No Code Changes Required**: Users and developers don't need to modify their code - search works transparently!
+- **Zero Code Changes**: Drop-in replacement - no changes to your existing OpenAI code!
 
 ## 🚀 Quick Start
 
@@ -43,129 +43,132 @@ The API will be available at `http://localhost:8000`
 
 ## 📖 Usage
 
-### Basic Example (OpenAI)
+### Using with Official OpenAI SDK (Recommended)
+
+The easiest way to use this API is with the official OpenAI Python SDK:
 
 ```python
-import requests
+from openai import OpenAI
+import os
 
-response = requests.post(
-    "http://localhost:8000/v1/chat/completions",
-    json={
-        "model": "gpt-4",
-        "provider": "openai",
-        "api_key": "your-openai-api-key",
-        "tavily_api_key": "your-tavily-api-key",
-        "messages": [
-            {"role": "user", "content": "What's the latest news about AI?"}
-        ],
-        "stream": False
-    }
+# Just change the base_url - everything else is standard OpenAI!
+client = OpenAI(
+    base_url="http://localhost:8000/v1",
+    api_key=os.getenv("OPENAI_API_KEY")  # Your provider's API key
 )
 
-print(response.json())
+# Use GPT-4 (auto-detected as OpenAI)
+response = client.chat.completions.create(
+    model="gpt-4",
+    messages=[
+        {"role": "user", "content": "What's the latest news about AI?"}
+    ]
+)
+
+print(response.choices[0].message.content)
 ```
 
 ### Using with Anthropic (Claude)
 
 ```python
-response = requests.post(
-    "http://localhost:8000/v1/chat/completions",
-    json={
-        "model": "claude-3-5-sonnet-20241022",
-        "provider": "anthropic",
-        "api_key": "your-anthropic-api-key",
-        "tavily_api_key": "your-tavily-api-key",
-        "messages": [
-            {"role": "user", "content": "What are the latest developments in quantum computing?"}
-        ]
-    }
+from openai import OpenAI
+import os
+
+# Same client, different API key and model!
+client = OpenAI(
+    base_url="http://localhost:8000/v1",
+    api_key=os.getenv("ANTHROPIC_API_KEY")
 )
+
+# Use Claude (auto-detected as Anthropic)
+response = client.chat.completions.create(
+    model="claude-3-5-sonnet-20241022",
+    messages=[
+        {"role": "user", "content": "What are the latest developments in quantum computing?"}
+    ]
+)
+
+print(response.choices[0].message.content)
 ```
 
 ### Using with Google (Gemini)
 
 ```python
-response = requests.post(
-    "http://localhost:8000/v1/chat/completions",
-    json={
-        "model": "gemini-2.0-flash-exp",
-        "provider": "google",
-        "api_key": "your-google-api-key",
-        "tavily_api_key": "your-tavily-api-key",
-        "messages": [
-            {"role": "user", "content": "What's the current price of Bitcoin?"}
-        ]
-    }
+from openai import OpenAI
+import os
+
+client = OpenAI(
+    base_url="http://localhost:8000/v1",
+    api_key=os.getenv("GOOGLE_API_KEY")
 )
+
+# Use Gemini (auto-detected as Google)
+response = client.chat.completions.create(
+    model="gemini-2.0-flash-exp",
+    messages=[
+        {"role": "user", "content": "What's the current price of Bitcoin?"}
+    ]
+)
+
+print(response.choices[0].message.content)
 ```
 
 ### Streaming Responses
 
 ```python
-import requests
+from openai import OpenAI
+import os
 
-response = requests.post(
-    "http://localhost:8000/v1/chat/completions",
-    json={
-        "model": "gpt-4",
-        "provider": "openai",
-        "api_key": "your-openai-api-key",
-        "tavily_api_key": "your-tavily-api-key",
-        "messages": [
-            {"role": "user", "content": "Explain quantum entanglement"}
-        ],
-        "stream": True
-    },
+client = OpenAI(
+    base_url="http://localhost:8000/v1",
+    api_key=os.getenv("OPENAI_API_KEY")
+)
+
+# Streaming works exactly like OpenAI!
+stream = client.chat.completions.create(
+    model="gpt-4",
+    messages=[
+        {"role": "user", "content": "Explain quantum entanglement"}
+    ],
     stream=True
 )
 
-for line in response.iter_lines():
-    if line:
-        print(line.decode('utf-8'))
+for chunk in stream:
+    if chunk.choices[0].delta.content is not None:
+        print(chunk.choices[0].delta.content, end='', flush=True)
 ```
 
 ### Vision/Multimodal Support
 
 ```python
-response = requests.post(
-    "http://localhost:8000/v1/chat/completions",
-    json={
-        "model": "gpt-4o",
-        "provider": "openai",
-        "api_key": "your-openai-api-key",
-        "tavily_api_key": "your-tavily-api-key",
-        "messages": [
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": "What's in this image?"},
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": "https://example.com/image.jpg"
-                        }
-                    }
-                ]
-            }
-        ]
-    }
-)
-```
-
-### Using with OpenAI Python SDK
-
-You can use this API as a drop-in replacement for OpenAI:
-
-```python
 from openai import OpenAI
+import os
 
 client = OpenAI(
     base_url="http://localhost:8000/v1",
-    api_key="dummy"  # Not used by our proxy
+    api_key=os.getenv("OPENAI_API_KEY")
 )
 
-# Note: You'll need to pass provider and keys in messages or modify the client
-# For full compatibility, use the requests library as shown above
+# Vision works exactly like OpenAI!
+response = client.chat.completions.create(
+    model="gpt-4o",
+    messages=[
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "What's in this image?"},
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": "https://example.com/image.jpg"
+                    }
+                }
+            ]
+        }
+    ]
+)
+
+print(response.choices[0].message.content)
 ```
 
 ## 🔧 Configuration
@@ -187,20 +190,34 @@ PORT=8000
 LOG_LEVEL=info
 ```
 
+### How It Works
+
+1. **Set your base_url** to our API endpoint
+2. **Use your provider's API key** in the client
+3. **Choose any model** - we auto-detect the provider:
+   - `gpt-*` → OpenAI
+   - `claude*` → Anthropic
+   - `gemini*` → Google
+4. **Everything else is standard** OpenAI SDK!
+
 ### Request Parameters
+
+Standard OpenAI parameters are supported:
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `model` | string | Yes | Model name (e.g., "gpt-4", "claude-3-5-sonnet-20241022") |
-| `provider` | string | Yes | Provider: "openai", "anthropic", or "google" |
-| `api_key` | string | Yes | API key for the model provider |
+| `model` | string | Yes | Model name (auto-detects provider) |
 | `messages` | array | Yes | Array of message objects |
-| `tavily_api_key` | string | No* | Tavily API key (*required for search) |
 | `stream` | boolean | No | Enable streaming (default: false) |
 | `temperature` | float | No | Sampling temperature 0-2 (default: 0.7) |
 | `max_tokens` | integer | No | Maximum tokens to generate |
-| `enable_search` | boolean | No | Enable Tavily search (default: true) |
-| `max_search_results` | integer | No | Max search results 1-10 (default: 5) |
+| `top_p` | float | No | Nucleus sampling parameter |
+| `presence_penalty` | float | No | Presence penalty (-2.0 to 2.0) |
+| `frequency_penalty` | float | No | Frequency penalty (-2.0 to 2.0) |
+| `n` | integer | No | Number of completions to generate |
+| `user` | string | No | Unique user identifier |
+
+**Note**: API key is passed via the `Authorization` header (handled automatically by OpenAI SDK). Tavily API key is configured server-side in the `.env` file.
 
 ## 🏗️ Architecture
 
@@ -303,30 +320,23 @@ API information and available endpoints.
 
 ## 🧪 Testing
 
-Create a test script `test_api.py`:
+Run the example scripts to test the API:
 
-```python
-import requests
-import json
+```bash
+# Basic examples with OpenAI SDK
+python examples/openai_sdk_basic.py
 
-def test_chat():
-    response = requests.post(
-        "http://localhost:8000/v1/chat/completions",
-        json={
-            "model": "gpt-3.5-turbo",
-            "provider": "openai",
-            "api_key": "your-key",
-            "tavily_api_key": "your-tavily-key",
-            "messages": [
-                {"role": "user", "content": "What's the latest on SpaceX?"}
-            ]
-        }
-    )
-    print(json.dumps(response.json(), indent=2))
+# Multi-provider examples (OpenAI, Anthropic, Google)
+python examples/openai_sdk_multimodel.py
 
-if __name__ == "__main__":
-    test_chat()
+# Search integration examples
+python examples/openai_sdk_search.py
 ```
+
+Each example demonstrates different aspects:
+- **openai_sdk_basic.py**: Basic usage, streaming, and vision
+- **openai_sdk_multimodel.py**: Using all three providers with auto-detection
+- **openai_sdk_search.py**: How the LLM automatically uses search when needed
 
 ## 🛠️ Development
 
@@ -337,12 +347,20 @@ openai_agent_magic/
 ├── src/
 │   ├── __init__.py
 │   ├── main.py           # FastAPI application
-│   ├── models.py         # Pydantic models
+│   ├── models.py         # Pydantic models + auto-detection
 │   ├── llm_provider.py   # Multi-provider LLM wrapper
 │   └── agent.py          # Search agent with tool calling
+├── examples/
+│   ├── openai_sdk_basic.py      # Basic OpenAI SDK examples
+│   ├── openai_sdk_multimodel.py # Multi-provider examples
+│   ├── openai_sdk_search.py     # Search integration examples
+│   ├── test_basic.py            # Direct HTTP examples
+│   ├── test_streaming.py        # Streaming examples
+│   └── test_vision.py           # Vision examples
 ├── requirements.txt      # Python dependencies
 ├── .env.example         # Environment variables template
 ├── .gitignore
+├── run_server.sh        # Server startup script
 └── README.md
 ```
 

@@ -44,9 +44,9 @@ class Message(BaseModel):
 
 
 class ChatCompletionRequest(BaseModel):
-    """OpenAI-compatible chat completion request with provider configuration."""
+    """OpenAI-compatible chat completion request."""
 
-    # Standard OpenAI parameters
+    # Standard OpenAI parameters (fully compatible)
     model: str = Field(..., description="Model name to use")
     messages: List[Message] = Field(..., description="List of messages in the conversation")
     temperature: Optional[float] = Field(default=0.7, ge=0.0, le=2.0, description="Sampling temperature")
@@ -56,19 +56,39 @@ class ChatCompletionRequest(BaseModel):
     stop: Optional[Union[str, List[str]]] = Field(default=None, description="Stop sequences")
     presence_penalty: Optional[float] = Field(default=0.0, ge=-2.0, le=2.0)
     frequency_penalty: Optional[float] = Field(default=0.0, ge=-2.0, le=2.0)
-
-    # Provider-specific configuration
-    provider: ModelProvider = Field(..., description="Model provider: openai, anthropic, or google")
-    api_key: str = Field(..., description="API key for the model provider")
-    api_base: Optional[str] = Field(default=None, description="Optional custom API base URL")
-
-    # Tavily search configuration
-    tavily_api_key: Optional[str] = Field(default=None, description="Tavily API key for search functionality")
-    enable_search: Optional[bool] = Field(default=True, description="Enable Tavily search tool")
-    max_search_results: Optional[int] = Field(default=5, ge=1, le=10, description="Max search results per query")
+    n: Optional[int] = Field(default=1, description="Number of completions to generate")
+    user: Optional[str] = Field(default=None, description="Unique user identifier")
 
     class Config:
         use_enum_values = True
+
+
+def detect_provider_from_model(model_name: str) -> ModelProvider:
+    """
+    Auto-detect provider from model name.
+
+    Args:
+        model_name: Name of the model
+
+    Returns:
+        ModelProvider enum value
+
+    Rules:
+        - Models starting with "gpt-" → OpenAI
+        - Models starting with "claude" → Anthropic
+        - Models starting with "gemini" → Google
+    """
+    model_lower = model_name.lower()
+
+    if model_lower.startswith("gpt-"):
+        return ModelProvider.OPENAI
+    elif model_lower.startswith("claude"):
+        return ModelProvider.ANTHROPIC
+    elif model_lower.startswith("gemini"):
+        return ModelProvider.GOOGLE
+    else:
+        # Default to OpenAI for unknown models
+        return ModelProvider.OPENAI
 
 
 class Usage(BaseModel):
