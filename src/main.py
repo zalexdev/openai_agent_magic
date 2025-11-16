@@ -64,10 +64,13 @@ async def root():
         "version": "1.0.0",
         "endpoints": {
             "chat_completions": "/v1/chat/completions",
+            "responses": "/v1/responses",
+            "responses_alt": "/responses",
             "health": "/health"
         },
         "supported_providers": ["openai", "anthropic", "google"],
-        "features": ["streaming", "vision", "tool_calling", "tavily_search"]
+        "features": ["streaming", "vision", "tool_calling", "tavily_search", "auto_provider_detection"],
+        "note": "Both /v1/chat/completions and /v1/responses endpoints are supported"
     }
 
 
@@ -186,14 +189,12 @@ async def stream_completion(
         yield f"data: {json.dumps(error_chunk)}\n\n"
 
 
-@app.post("/v1/chat/completions")
-async def chat_completions(
+async def handle_completion_request(
     request: ChatCompletionRequest,
-    authorization: Optional[str] = Header(None)
+    authorization: Optional[str]
 ):
     """
-    OpenAI-compatible chat completions endpoint.
-    Transparently adds Tavily search to any model.
+    Handle completion request (shared logic for multiple endpoints).
 
     The API key should be provided in the Authorization header:
     Authorization: Bearer YOUR_API_KEY
@@ -310,6 +311,41 @@ async def chat_completions(
 
     except Exception as e:
         return create_error_response(f"Unexpected error: {str(e)}", "internal_error")
+
+
+@app.post("/v1/chat/completions")
+async def chat_completions(
+    request: ChatCompletionRequest,
+    authorization: Optional[str] = Header(None)
+):
+    """
+    OpenAI chat completions endpoint.
+    Standard endpoint for chat-based models.
+    """
+    return await handle_completion_request(request, authorization)
+
+
+@app.post("/v1/responses")
+async def responses(
+    request: ChatCompletionRequest,
+    authorization: Optional[str] = Header(None)
+):
+    """
+    OpenAI Responses API endpoint.
+    Newer endpoint format that's compatible with the latest OpenAI SDK.
+    """
+    return await handle_completion_request(request, authorization)
+
+
+@app.post("/responses")
+async def responses_no_version(
+    request: ChatCompletionRequest,
+    authorization: Optional[str] = Header(None)
+):
+    """
+    Responses endpoint without /v1 prefix (for compatibility).
+    """
+    return await handle_completion_request(request, authorization)
 
 
 @app.exception_handler(Exception)
