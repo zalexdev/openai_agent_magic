@@ -205,9 +205,12 @@ async def handle_completion_request(
     - gemini* → Google
     """
     try:
+        # Get messages from either 'messages' or 'input' field
+        messages = request.get_messages()
+
         # Validate request
-        if not request.messages:
-            return create_error_response("messages field is required and cannot be empty")
+        if not messages:
+            return create_error_response("messages or input field is required and cannot be empty")
 
         # Extract API key from Authorization header
         api_key = extract_bearer_token(authorization)
@@ -253,7 +256,7 @@ async def handle_completion_request(
             return StreamingResponse(
                 stream_completion(
                     agent=agent,
-                    messages=request.messages,
+                    messages=messages,
                     model=request.model,
                     request_id=request_id,
                 ),
@@ -267,7 +270,7 @@ async def handle_completion_request(
 
         # Non-streaming response
         try:
-            response_message = await agent.generate(request.messages)
+            response_message = await agent.generate(messages)
 
             # Extract content from response
             if hasattr(response_message, 'content'):
@@ -282,7 +285,7 @@ async def handle_completion_request(
             )
 
             # Estimate token usage (simplified - real implementation would use tokenizers)
-            prompt_tokens = sum(len(str(m.content).split()) for m in request.messages) * 2
+            prompt_tokens = sum(len(str(m.content).split()) for m in messages) * 2
             completion_tokens = len(str(content).split()) * 2
             total_tokens = prompt_tokens + completion_tokens
 

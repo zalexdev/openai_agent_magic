@@ -48,7 +48,8 @@ class ChatCompletionRequest(BaseModel):
 
     # Standard OpenAI parameters (fully compatible)
     model: str = Field(..., description="Model name to use")
-    messages: List[Message] = Field(..., description="List of messages in the conversation")
+    messages: Optional[List[Message]] = Field(default=None, description="List of messages (chat.completions API)")
+    input: Optional[List[Message]] = Field(default=None, description="List of messages (responses API)")
     temperature: Optional[float] = Field(default=0.7, ge=0.0, le=2.0, description="Sampling temperature")
     top_p: Optional[float] = Field(default=1.0, ge=0.0, le=1.0, description="Nucleus sampling parameter")
     max_tokens: Optional[int] = Field(default=None, description="Maximum tokens to generate")
@@ -59,8 +60,13 @@ class ChatCompletionRequest(BaseModel):
     n: Optional[int] = Field(default=1, description="Number of completions to generate")
     user: Optional[str] = Field(default=None, description="Unique user identifier")
 
-    class Config:
-        use_enum_values = True
+    model_config = {
+        "use_enum_values": True
+    }
+
+    def get_messages(self) -> List[Message]:
+        """Get messages from either 'messages' or 'input' field."""
+        return self.messages or self.input or []
 
 
 def detect_provider_from_model(model_name: str) -> ModelProvider:
