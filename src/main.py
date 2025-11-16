@@ -223,10 +223,17 @@ async def handle_completion_request(
 
         # Auto-detect provider from model name
         provider = detect_provider_from_model(request.model)
+        print(f"[API] Detected provider: {provider.value} for model: {request.model}")
 
         # Get configuration from environment
         tavily_api_key = os.getenv("TAVILY_API_KEY")
         custom_base_url = os.getenv("CUSTOM_BASE_URL")  # e.g., http://185.150.190.236:3000/v1
+
+        # Debug logging
+        if custom_base_url:
+            print(f"[API] Using custom base URL: {custom_base_url}")
+        else:
+            print(f"[API] No custom base URL set, using default for {provider.value}")
 
         # Create LLM provider
         try:

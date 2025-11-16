@@ -103,6 +103,7 @@ class LLMProvider:
             }
             if api_base:
                 llm_kwargs["base_url"] = api_base
+                print(f"[LLMProvider] Using custom base URL for OpenAI: {api_base}")
             if max_tokens:
                 llm_kwargs["max_tokens"] = max_tokens
 
@@ -115,7 +116,8 @@ class LLMProvider:
                 "temperature": temperature,
             }
             if api_base:
-                llm_kwargs["anthropic_api_url"] = api_base
+                llm_kwargs["base_url"] = api_base
+                print(f"[LLMProvider] Using custom base URL for Anthropic: {api_base}")
             if max_tokens:
                 llm_kwargs["max_tokens"] = max_tokens
 
@@ -127,6 +129,21 @@ class LLMProvider:
                 "google_api_key": api_key,
                 "temperature": temperature,
             }
+            # Google Generative AI doesn't support custom base URLs via LangChain
+            # For custom endpoints with Google models, use OpenAI-compatible mode
+            if api_base:
+                print(f"[LLMProvider] Custom base URL for Google: {api_base}")
+                print("[LLMProvider] Note: Using OpenAI compatibility mode for custom endpoint")
+                # Use ChatOpenAI with the custom base URL for Google models
+                return ChatOpenAI(
+                    model=model_name,
+                    api_key=api_key,
+                    base_url=api_base,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    **kwargs
+                )
+
             if max_tokens:
                 llm_kwargs["max_output_tokens"] = max_tokens
 
