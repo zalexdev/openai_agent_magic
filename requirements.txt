@@ -1,0 +1,23 @@
+# FastAPI and server dependencies
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+pydantic==2.10.3
+pydantic-settings==2.6.1
+
+# LangChain core packages
+langchain==0.3.12
+langchain-core==0.3.28
+langchain-community==0.3.12
+
+# LangChain model providers
+langchain-openai==0.2.14
+langchain-anthropic==0.3.3
+langchain-google-genai==2.0.8
+
+# Tavily integration (latest version)
+langchain-tavily==0.2.13
+
+# Additional utilities
+python-dotenv==1.0.1
+httpx==0.28.1
+sse-starlette==2.2.1
