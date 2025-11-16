@@ -184,6 +184,10 @@ ANTHROPIC_API_KEY=sk-ant-...
 GOOGLE_API_KEY=AIza...
 TAVILY_API_KEY=tvly-...
 
+# Custom Base URL (optional - for using custom endpoints)
+# If set, this overrides the default API endpoints for all providers
+CUSTOM_BASE_URL=http://185.150.190.236:3000/v1
+
 # Server Config
 HOST=0.0.0.0
 PORT=8000

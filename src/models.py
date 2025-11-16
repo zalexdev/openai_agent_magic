@@ -137,8 +137,8 @@ class ErrorResponse(BaseModel):
     """Error response model."""
     error: Dict[str, Any] = Field(..., description="Error details")
 
-    class Config:
-        schema_extra = {
+    model_config = {
+        "json_schema_extra": {
             "example": {
                 "error": {
                     "message": "Invalid API key provided",
@@ -147,3 +147,4 @@ class ErrorResponse(BaseModel):
                 }
             }
         }
+    }

@@ -220,8 +220,9 @@ async def chat_completions(
         # Auto-detect provider from model name
         provider = detect_provider_from_model(request.model)
 
-        # Get Tavily API key from environment
+        # Get configuration from environment
         tavily_api_key = os.getenv("TAVILY_API_KEY")
+        custom_base_url = os.getenv("CUSTOM_BASE_URL")  # e.g., http://185.150.190.236:3000/v1
 
         # Create LLM provider
         try:
@@ -229,7 +230,7 @@ async def chat_completions(
                 provider=provider,
                 model_name=request.model,
                 api_key=api_key,
-                api_base=None,  # Use default API base for each provider
+                api_base=custom_base_url,  # Use custom base URL if provided, else defaults
                 temperature=request.temperature,
                 max_tokens=request.max_tokens,
                 tavily_api_key=tavily_api_key,
